@@ -32,7 +32,10 @@ function transformRequestPhrase(phrase) {
 async function loadImages() {
   hideLoadMore();
   const requestPhrase = transformRequestPhrase(refs.input.value);
-  if (requestPhrase.length < 2) return;
+  if (requestPhrase.length < 2) {
+    Notify.failure('Please enter at least two symbols');
+    return;
+  }
 
   refs.spinner.classList.add('active');
   gallery && gallery.destroy();
@@ -108,17 +111,13 @@ function renderItem({
   const info = document.createElement('div');
   info.className = 'gallery__info';
 
-  info.append(infoLikes);
-  info.append(infoViews);
-  info.append(infoComments);
-  info.append(infoDownloads);
+  info.append(infoLikes, infoViews, infoComments, infoDownloads);
 
   const link = document.createElement('a');
   link.className = 'gallery__item';
   link.href = largeImageURL;
 
-  link.append(image);
-  link.append(info);
+  link.append(image, info);
 
   return link;
 }
