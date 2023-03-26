@@ -9,7 +9,8 @@ export default class {
   async getResource(req, page) {
     const url = `${this.BASE_URL}?key=${API_KEY}&q=${req}&${this.OPTS}&page=${page}`;
     const res = await axios.get(url);
-    return this.transformResponse(res.data.hits);
+    const { totalHits, hits } = res.data;
+    return { totalHits, hits: this.transformResponse(hits) };
   }
 
   transformResponse(res) {

@@ -15,6 +15,12 @@
   text-align: center;
 }
 
+.load-more {
+  &.hidden {
+    display: none;
+  }
+}
+
 :root {
   --timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   --animation-duration: 250ms;
@@ -58,6 +64,7 @@
 .gallery__info {
   display: flex;
   justify-content: space-around;
+  padding: 0 15px;
 
   p {
     margin-bottom: 0;

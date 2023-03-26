@@ -30,19 +30,30 @@ function transformRequestPhrase(phrase) {
 }
 
 async function loadImages() {
+  hideLoadMore();
+  const requestPhrase = transformRequestPhrase(refs.input.value);
+  if (requestPhrase.length < 2) return;
+
   refs.spinner.classList.add('active');
   gallery && gallery.destroy();
-  const requestPhrase = transformRequestPhrase(refs.input.value);
 
   try {
-    const response = await apiService.getResource(requestPhrase, page);
+    const { totalHits, hits: response } = await apiService.getResource(requestPhrase, page);
 
     if (response.length === 0) {
       throw new Error();
     }
 
     renderGallery(response);
+
     gallery = new SimpleLightbox('.gallery a');
+
+    if (refs.gallery.children.length === totalHits) {
+      hideLoadMore();
+      Notify.failure('We\'re sorry, but you\'ve reached the end of search results.');
+    } else {
+      showLoadMore();
+    }
     page += 1;
   } catch {
     Notify.failure('Sorry, there are no images matching your search query. Please try again.');
@@ -53,9 +64,13 @@ async function loadImages() {
 }
 
 function renderGallery(arr) {
+  const listFragment = new DocumentFragment();
+
   arr.forEach(item => {
-    refs.gallery.innerHTML += renderItem(item);
+    listFragment.append(renderItem(item));
   });
+
+  refs.gallery.append(listFragment);
 }
 
 function renderItem({
@@ -67,28 +82,56 @@ function renderItem({
   comments,
   downloads
 }) {
-  return `
-    <a href='${largeImageURL}' class='gallery__item'>
-      <img src="${webformatURL}" alt="${tags}" loading="lazy" class='gallery__image' />
-      <div class="gallery__info">
-        <p class="gallery__info-item">
-          <b>Likes: ${likes}</b>
-        </p>
-        <p class="gallery__info-item">
-          <b>Views: ${views}</b>
-        </p>
-        <p class="gallery__info-item">
-          <b>Comments: ${comments}</b>
-        </p>
-        <p class="gallery__info-item">
-          <b>Downloads: ${downloads}</b>
-        </p>
-      </div>
-    </a>
-  `;
+  const createItemInfo = (label, value) => {
+    const b = document.createElement('b');
+    b.textContent = `${label}: ${value}`;
+
+    const p = document.createElement('p');
+    p.className = 'gallery__info-item';
+
+    p.append(b);
+
+    return p;
+  };
+
+  const image = document.createElement('img');
+  image.src = webformatURL;
+  image.alt = tags;
+  image.loading = 'lazy';
+  image.className = 'gallery__image';
+
+  const infoLikes = createItemInfo('Likes', likes);
+  const infoViews = createItemInfo('Views', views);
+  const infoComments = createItemInfo('Comments', comments);
+  const infoDownloads = createItemInfo('Downloads', downloads);
+
+  const info = document.createElement('div');
+  info.className = 'gallery__info';
+
+  info.append(infoLikes);
+  info.append(infoViews);
+  info.append(infoComments);
+  info.append(infoDownloads);
+
+  const link = document.createElement('a');
+  link.className = 'gallery__item';
+  link.href = largeImageURL;
+
+  link.append(image);
+  link.append(info);
+
+  return link;
 }
 
 function clearGallery() {
   page = 1;
   refs.gallery.innerHTML = "";
+}
+
+function showLoadMore() {
+  refs.btnLoadMore.classList.remove('hidden');
+}
+
+function hideLoadMore() {
+  refs.btnLoadMore.classList.add('hidden');
 }
